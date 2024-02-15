@@ -27,12 +27,14 @@ POST /api/register: Register a new user by providing a username and password in 
 
 POST /api/login: Login with an existing username and password. Upon successful login, it returns a JWT access token.
 
-POST /api/blogs: Create a new blog by providing a blog title, content, author ID, and optionally, subscriber information.
+POST /api/blogs: Create a new blog by providing a blog title, content, and author ID. The author ID is stored as a foreign key in the blog schema.
 
 GET /api/blogs/:authorId: Retrieve blogs written by a specific author by providing the author ID.
 
+GET /api/blogs: Retrieve all blogs.
+
 Authentication
-Authentication is done using JWT tokens. Upon successful login, a token is generated, which should be included in the headers of subsequent requests as Authorization: Bearer <token> or Authorization: <token>
+Authentication is done using JWT tokens. Upon successful login, a token is generated, which should be included in the headers of subsequent requests as Authorization: <token>
 
 To access protected endpoints such as creating or retrieving blogs, clients need to include the JWT token obtained during login.
 
