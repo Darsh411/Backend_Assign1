@@ -8,8 +8,6 @@ const app = express();
 const router = express.Router();
 
 mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
 });
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
@@ -18,8 +16,8 @@ db.once('open', () => {
 });
 
 const userSchema = new mongoose.Schema({
-  username: { type: String, unique: true, required: true },
-  password: { type: String, required: true },
+  username: { type: String ,required:true,unique:true},
+  password: { type: String,required:true},
 });
 
 const User = mongoose.model('User', userSchema);
@@ -52,7 +50,17 @@ const authenticateToken = (req, res, next) => {
 
 router.post('/register', async (req, res) => {
   try {
-    const { username, password, } = req.body;
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ username, password: hashedPassword });
     await user.save();
@@ -63,22 +71,33 @@ router.post('/register', async (req, res) => {
   }
 });
 
+
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
     const user = await User.findOne({ username });
-    if (!user) return res.status(401).json({ error: 'Invalid username or password' });
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
 
     const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) return res.status(401).json({ error: 'Invalid username or password' });
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
 
-    const accessToken = jwt.sign({ username: user.username }, process.env.ACCESS_TOKEN_SECRET);
+    const accessToken = jwt.sign({ userId: user._id }, process.env.ACCESS_TOKEN_SECRET);
     res.json({ accessToken });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 });
+
 
 router.post('/blogs', authenticateToken, async (req, res) => {
   try {
@@ -92,8 +111,9 @@ router.post('/blogs', authenticateToken, async (req, res) => {
   }
 });
 
-router.get('/blogs/:authorId', authenticateToken, async (req, res) => {
+router.get('/blogs/:authorId',authenticateToken, async (req, res) => {
   try {
+    const authorId = parseInt(req.params.authorId); // Parsing authorId as an integer
     const blogs = await Blog.find({ authorId });
     if (!blogs || blogs.length === 0) {
       return res.status(404).json({ error: 'Blogs not found for this author' });
@@ -104,6 +124,7 @@ router.get('/blogs/:authorId', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
