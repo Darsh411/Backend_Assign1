@@ -32,7 +32,7 @@ POST /api/blogs: Create a new blog by providing a blog title, content, author ID
 GET /api/blogs/:authorId: Retrieve blogs written by a specific author by providing the author ID.
 
 Authentication
-Authentication is done using JWT tokens. Upon successful login, a token is generated, which should be included in the headers of subsequent requests as Authorization: Bearer <token>.
+Authentication is done using JWT tokens. Upon successful login, a token is generated, which should be included in the headers of subsequent requests as Authorization: Bearer <token> or Authorization: <token>
 
 To access protected endpoints such as creating or retrieving blogs, clients need to include the JWT token obtained during login.
 
